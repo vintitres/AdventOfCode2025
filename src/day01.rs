@@ -1,38 +1,33 @@
-use std::collections::HashMap;
-
-use itertools::Itertools;
-
-fn read_input(input: &str) -> (Vec<u64>, Vec<u64>) {
+fn read_input(input: &str) -> Vec<(char, i64)> {
     input
         .lines()
         .map(|l| {
-            l.split_whitespace()
-                .map(|n| n.parse::<u64>().unwrap())
-                .collect_tuple()
-                .unwrap()
+            let (letter, number) = l.split_at(1);
+            (
+                letter.chars().next().unwrap(),
+                number.parse::<i64>().unwrap(),
+            )
         })
-        .unzip()
+        .collect()
 }
 
-pub fn part1(input: &str) -> u64 {
-    let (mut left, mut right) = read_input(input);
-    left.sort();
-    right.sort();
-    left.iter()
-        .zip(right)
-        .map(|(&l, r)| if l > r { l - r } else { r - l })
-        .sum()
+fn modulo(a: i64, b: i64) -> i64 {
+    ((a % b) + b) % b
+}
+
+pub fn part1(input: &str) -> usize {
+    read_input(input)
+        .iter()
+        .scan(50, |val, &(letter, number)| {
+            *val = modulo(*val + if letter == 'R' { number } else { -number }, 100);
+            Some(*val == 0)
+        })
+        .filter(|&x| x)
+        .count()
 }
 
 pub fn part2(input: &str) -> u64 {
-    let (left, right) = read_input(input);
-    let mut right_count = HashMap::<u64, usize>::new();
-    for n in right {
-        *right_count.entry(n).or_insert(0) += 1;
-    }
-    left.iter()
-        .map(|&n| *right_count.entry(n).or_insert(0) as u64 * n)
-        .sum()
+    1
 }
 
 #[cfg(test)]
@@ -45,11 +40,11 @@ mod tests {
 
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 1603498);
+        assert_eq!(part1(input()), 962);
     }
 
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 1);
     }
 }
