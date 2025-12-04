@@ -38,8 +38,7 @@ pub fn part2(input: &str) -> i64 {
             };
             let mut hits = number / 100;
             if *val != 0
-                && ((letter == 'R' && *val + x >= 100)
-                    || (letter != 'R' && *val - number % 100 <= 0))
+                && ((letter == 'R' && *val + x >= 100) || (letter != 'R' && *val <= number % 100))
             {
                 hits += 1;
             }
