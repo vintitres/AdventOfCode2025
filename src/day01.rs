@@ -26,8 +26,28 @@ pub fn part1(input: &str) -> usize {
         .count()
 }
 
-pub fn part2(input: &str) -> u64 {
-    1
+pub fn part2(input: &str) -> i64 {
+    read_input(input)
+        .iter()
+        .scan(50, |val, &(letter, number)| {
+            let x = if letter == 'R' { number } else { -number };
+            let hit = if letter == 'R' {
+                if *val != 0 && *val + (number % 100) >= 100 {
+                    1
+                } else {
+                    0
+                }
+            } else {
+                if *val != 0 && *val - (number % 100) <= 0 {
+                    1
+                } else {
+                    0
+                }
+            };
+            *val = modulo(*val + x, 100);
+            Some(hit + number / 100)
+        })
+        .sum()
 }
 
 #[cfg(test)]
@@ -45,6 +65,6 @@ mod tests {
 
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 1);
+        assert_eq!(part2(input()), 5782);
     }
 }
