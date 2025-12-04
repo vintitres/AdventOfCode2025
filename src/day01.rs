@@ -11,15 +11,16 @@ fn read_input(input: &str) -> Vec<(char, i64)> {
         .collect()
 }
 
-fn modulo(a: i64, b: i64) -> i64 {
-    ((a % b) + b) % b
-}
-
 pub fn part1(input: &str) -> usize {
     read_input(input)
         .iter()
         .scan(50, |val, &(letter, number)| {
-            *val = modulo(*val + if letter == 'R' { number } else { -number }, 100);
+            let x = if letter == 'R' {
+                number % 100
+            } else {
+                100 - number % 100
+            };
+            *val = (*val + x) % 100;
             Some(*val == 0)
         })
         .filter(|&x| x)
@@ -30,22 +31,20 @@ pub fn part2(input: &str) -> i64 {
     read_input(input)
         .iter()
         .scan(50, |val, &(letter, number)| {
-            let x = if letter == 'R' { number } else { -number };
-            let hit = if letter == 'R' {
-                if *val != 0 && *val + (number % 100) >= 100 {
-                    1
-                } else {
-                    0
-                }
+            let x = if letter == 'R' {
+                number % 100
             } else {
-                if *val != 0 && *val - (number % 100) <= 0 {
-                    1
-                } else {
-                    0
-                }
+                100 - number % 100
             };
-            *val = modulo(*val + x, 100);
-            Some(hit + number / 100)
+            let mut hits = number / 100;
+            if *val != 0
+                && ((letter == 'R' && *val + x >= 100)
+                    || (letter != 'R' && *val - number % 100 <= 0))
+            {
+                hits += 1;
+            }
+            *val = (*val + x) % 100;
+            Some(hits)
         })
         .sum()
 }
