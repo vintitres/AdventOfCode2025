@@ -36,12 +36,15 @@ pub fn part2(input: &str) -> i64 {
             } else {
                 100 - number % 100
             };
-            let mut hits = number / 100;
-            if *val != 0
-                && ((letter == 'R' && *val + x >= 100) || (letter != 'R' && *val <= number % 100))
-            {
-                hits += 1;
-            }
+            let hits = number / 100
+                + if *val != 0
+                    && ((letter == 'R' && *val + x >= 100)
+                        || (letter != 'R' && *val <= number % 100))
+                {
+                    1
+                } else {
+                    0
+                };
             *val = (*val + x) % 100;
             Some(hits)
         })
