@@ -48,6 +48,7 @@ pub fn part2(input: &str) -> usize {
         .collect_vec();
     let mut flipped_input = vec![vec!['-'; input.len()]; input[0].len()];
     println!("{:?}", flipped_input);
+    1
 }
 
 #[cfg(test)]
