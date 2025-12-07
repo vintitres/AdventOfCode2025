@@ -69,7 +69,7 @@ mod tests {
     use super::*;
 
     fn input() -> &'static str {
-        include_str!("../input/2025/day2.txt")
+        include_str!("../input/2025/day4.txt")
     }
 
     #[test]
