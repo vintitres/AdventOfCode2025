@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 pub fn part1(input: &str) -> usize {
     let mut beams = HashSet::new();
@@ -28,29 +28,32 @@ pub fn part1(input: &str) -> usize {
 pub fn part2(input: &str) -> usize {
     input
         .lines()
-        .fold(HashMap::<usize, usize>::new(), |mut beams, line| {
-            if !beams.is_empty() {
-                let mut new_beams: HashMap<usize, usize> = HashMap::new();
-                for (&i, paths) in beams.iter() {
-                    if line.chars().nth(i).unwrap() == '^' {
+        .fold(
+            vec![0; input.lines().next().unwrap().len()],
+            |beams, line| {
+                let mut new_beams = beams.clone();
+                if let Some(pos) = line.chars().position(|c| c == 'S') {
+                    new_beams[pos] = 1;
+                    return new_beams;
+                }
+                beams
+                    .iter()
+                    .enumerate()
+                    .filter(|(i, &beam)| beam > 0 && line.chars().nth(*i).unwrap() == '^')
+                    .for_each(|(i, &beam)| {
                         if i + 1 < line.len() {
-                            *new_beams.entry(i + 1).or_insert(0) += paths;
+                            new_beams[i + 1] += beam;
                         }
                         if i > 0 {
-                            *new_beams.entry(i - 1).or_insert(0) += paths;
+                            new_beams[i - 1] += beam;
                         }
-                    } else {
-                        *new_beams.entry(i).or_insert(0) += paths;
-                    }
-                }
-                return new_beams;
-            } else if let Some(pos) = line.chars().position(|c| c == 'S') {
-                beams.insert(pos, 1);
-            }
-            beams
-        })
-        .into_values()
-        .sum()
+                        new_beams[i] = 0;
+                    });
+                new_beams
+            },
+        )
+        .iter()
+        .sum::<usize>()
 }
 
 #[cfg(test)]
