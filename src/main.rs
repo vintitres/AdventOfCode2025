@@ -1,7 +1,7 @@
-use adventofcode2025::day06 as day;
+use adventofcode2025::day07 as day;
 
 fn main() {
-    let input = include_str!("../input/2025/day6.txt");
+    let input = include_str!("../input/2025/day7.txt");
     dbg!(day::part1(input));
     dbg!(day::part2(input));
 }
