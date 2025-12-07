@@ -41,7 +41,13 @@ pub fn part1(input: &str) -> u64 {
 }
 
 pub fn part2(input: &str) -> usize {
-    input.lines().count()
+    let max_len = input.lines().map(|line| line.len()).max().unwrap();
+    let input = input
+        .lines()
+        .map(|line| line.chars().pad_using(max_len, |_| ' ').collect_vec())
+        .collect_vec();
+    let mut flipped_input = vec![vec!['-'; input.len()]; input[0].len()];
+    println!("{:?}", flipped_input);
 }
 
 #[cfg(test)]
