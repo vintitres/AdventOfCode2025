@@ -46,8 +46,18 @@ pub fn part2(input: &str) -> usize {
         .lines()
         .map(|line| line.chars().pad_using(max_len, |_| ' ').collect_vec())
         .collect_vec();
-    let mut flipped_input = vec![vec!['-'; input.len()]; input[0].len()];
-    println!("{:?}", flipped_input);
+    let flipped = (0..input[0].len())
+        .map(|col| {
+            (0..input.len())
+                .map(|row| input[row][col])
+                .filter(|&c| c != ' ')
+                .collect::<String>()
+        })
+        .filter(|s| !s.is_empty());
+    // .map(|s| s.parse::<u64>().unwrap());
+    println!("{:?}", flipped.collect_vec());
+    // .chunks(input.len())
+    // .map(|chunk| chunk.take(input.len() - 1).map(|s| s.parse::<u64>().unwrap()).sum())
     1
 }
 
