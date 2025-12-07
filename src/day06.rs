@@ -40,25 +40,40 @@ pub fn part1(input: &str) -> u64 {
         .sum::<u64>()
 }
 
-pub fn part2(input: &str) -> usize {
+pub fn part2(input: &str) -> u64 {
+    let ops = input
+        .lines()
+        .skip_while(|line| line.trim_start().chars().next().unwrap().is_numeric())
+        .next()
+        .unwrap()
+        .split_ascii_whitespace()
+        .map(|s| s.chars().next().unwrap())
+        .collect_vec();
     let max_len = input.lines().map(|line| line.len()).max().unwrap();
     let input = input
         .lines()
         .map(|line| line.chars().pad_using(max_len, |_| ' ').collect_vec())
         .collect_vec();
-    let flipped = (0..input[0].len())
+    (0..input[0].len())
         .map(|col| {
-            (0..input.len())
+            (0..input.len() - 1)
                 .map(|row| input[row][col])
                 .filter(|&c| c != ' ')
                 .collect::<String>()
         })
-        .filter(|s| !s.is_empty());
-    // .map(|s| s.parse::<u64>().unwrap());
-    println!("{:?}", flipped.collect_vec());
-    // .chunks(input.len())
-    // .map(|chunk| chunk.take(input.len() - 1).map(|s| s.parse::<u64>().unwrap()).sum())
-    1
+        .chunk_by(|s| !s.is_empty())
+        .into_iter()
+        .filter_map(|(key, chunk)| match key {
+            true => Some(chunk.map(|s| s.parse::<u64>().unwrap())),
+            false => None,
+        })
+        .zip(ops)
+        .map(|(chunk, op)| match op {
+            '*' => chunk.product::<u64>(),
+            '+' => chunk.sum::<u64>(),
+            _ => panic!("Invalid operator"),
+        })
+        .sum::<u64>()
 }
 
 #[cfg(test)]
@@ -74,9 +89,8 @@ mod tests {
         assert_eq!(part1(input()), 4719804927602);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 5782);
+        assert_eq!(part2(input()), 9608327000261);
     }
 }
