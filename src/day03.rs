@@ -1,5 +1,3 @@
-use std::{collections::BTreeSet, fmt::Pointer};
-
 use itertools::Itertools;
 
 pub fn part1(input: &str) -> u32 {
