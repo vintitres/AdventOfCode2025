@@ -33,11 +33,11 @@ pub fn part2(input: &str) -> u64 {
         .fold(
             BTreeSet::<(u64, u64)>::new(),
             |mut ranges, (mut start, mut end)| {
-                println!("Range: {} {}", start, end);
                 let mut cursor = ranges.lower_bound_mut(Bound::Included(&(start, start)));
                 if let Some(&(prev_start, prev_end)) = cursor.peek_prev() {
                     if prev_end >= start {
                         start = prev_start;
+                        end = std::cmp::max(end, prev_end);
                         cursor.remove_prev();
                     }
                 }
@@ -45,11 +45,10 @@ pub fn part2(input: &str) -> u64 {
                     if end < next_start {
                         break;
                     }
-                    end = next_end;
+                    end = std::cmp::max(end, next_end);
                     cursor.remove_next();
                 }
                 let _ = cursor.insert_after((start, end));
-                println!("Ranges: {:?}", ranges);
                 ranges
             },
         )
@@ -71,9 +70,8 @@ mod tests {
         assert_eq!(part1(input()), 720);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 5782);
+        assert_eq!(part2(input()), 357608232770687);
     }
 }
