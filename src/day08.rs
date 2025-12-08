@@ -20,13 +20,14 @@ pub fn part1(input: &str) -> usize {
         })
         .collect_vec();
 
-    let mut dist_pairs = Vec::new();
-    for i in 0..boxes.len() {
-        for j in i + 1..boxes.len() {
-            dist_pairs.push((distance3d(&boxes[i], &boxes[j]), (i, j)));
-        }
-    }
-    dist_pairs.sort();
+    let dist_pairs = (0..boxes.len())
+        .combinations(2)
+        .map(|pair| {
+            let (&i, &j) = pair.iter().collect_tuple().unwrap();
+            (distance3d(&boxes[i], &boxes[j]), (i, j))
+        })
+        .sorted()
+        .collect_vec();
 
     let mut circuts_sets = (0..boxes.len()).map(|i| HashSet::from([i])).collect_vec();
     let mut circuts_index = (0..boxes.len()).collect_vec();
@@ -64,13 +65,14 @@ pub fn part2(input: &str) -> i64 {
         })
         .collect_vec();
 
-    let mut dist_pairs = Vec::new();
-    for i in 0..boxes.len() {
-        for j in i + 1..boxes.len() {
-            dist_pairs.push((distance3d(&boxes[i], &boxes[j]), (i, j)));
-        }
-    }
-    dist_pairs.sort();
+    let dist_pairs = (0..boxes.len())
+        .combinations(2)
+        .map(|pair| {
+            let (&i, &j) = pair.iter().collect_tuple().unwrap();
+            (distance3d(&boxes[i], &boxes[j]), (i, j))
+        })
+        .sorted()
+        .collect_vec();
 
     let mut circuts_sets = (0..boxes.len()).map(|i| HashSet::from([i])).collect_vec();
     let mut circuts_index = (0..boxes.len()).collect_vec();
