@@ -51,8 +51,45 @@ pub fn part1(input: &str) -> usize {
         .product()
 }
 
-pub fn part2(input: &str) -> usize {
-    input.lines().count()
+pub fn part2(input: &str) -> i64 {
+    let boxes = input
+        .lines()
+        .map(|line| {
+            let (x, y, z) = line
+                .split(',')
+                .map(|s| s.parse::<i32>().unwrap())
+                .collect_tuple()
+                .unwrap();
+            (x, y, z)
+        })
+        .collect_vec();
+
+    let mut dist_pairs = Vec::new();
+    for i in 0..boxes.len() {
+        for j in i + 1..boxes.len() {
+            dist_pairs.push((distance3d(&boxes[i], &boxes[j]), (i, j)));
+        }
+    }
+    dist_pairs.sort();
+
+    let mut circuts_sets = (0..boxes.len()).map(|i| HashSet::from([i])).collect_vec();
+    let mut circuts_index = (0..boxes.len()).collect_vec();
+
+    for (_, (mut i, mut j)) in &dist_pairs {
+        if circuts_sets[circuts_index[i]].len() > circuts_sets[circuts_index[j]].len() {
+            std::mem::swap(&mut i, &mut j);
+        }
+        let to_move = circuts_sets[circuts_index[i]].clone();
+        circuts_sets[circuts_index[i]].clear();
+        for k in to_move {
+            circuts_sets[circuts_index[j]].insert(k);
+            circuts_index[k] = circuts_index[j];
+        }
+        if circuts_sets[circuts_index[j]].len() == boxes.len() {
+            return boxes[i].0 as i64 * boxes[j].0 as i64;
+        }
+    }
+    panic!("not connected")
 }
 
 #[cfg(test)]
@@ -60,7 +97,7 @@ mod tests {
     use super::*;
 
     fn input() -> &'static str {
-        include_str!("../input/2025/day2.txt")
+        include_str!("../input/2025/day8.txt")
     }
 
     #[test]
@@ -68,9 +105,8 @@ mod tests {
         assert_eq!(part1(input()), 46398);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 5782);
+        assert_eq!(part2(input()), 8141888143);
     }
 }
