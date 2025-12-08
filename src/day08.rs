@@ -32,6 +32,9 @@ pub fn part1(input: &str) -> usize {
     let mut circuts_index = (0..boxes.len()).collect_vec();
 
     for (_, (mut i, mut j)) in &dist_pairs[0..1000] {
+        if circuts_index[i] == circuts_index[j] {
+            continue;
+        }
         if circuts_sets[circuts_index[i]].len() > circuts_sets[circuts_index[j]].len() {
             std::mem::swap(&mut i, &mut j);
         }
@@ -77,6 +80,9 @@ pub fn part2(input: &str) -> i64 {
     let mut circuts_index = (0..boxes.len()).collect_vec();
 
     for (_, (mut i, mut j)) in &dist_pairs {
+        if circuts_index[i] == circuts_index[j] {
+            continue;
+        }
         if circuts_sets[circuts_index[i]].len() > circuts_sets[circuts_index[j]].len() {
             std::mem::swap(&mut i, &mut j);
         }
