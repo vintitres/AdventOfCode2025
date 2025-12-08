@@ -1,6 +1,5 @@
-use std::collections::HashSet;
-
 use itertools::Itertools;
+
 fn distance3d(a: &(i32, i32, i32), b: &(i32, i32, i32)) -> i64 {
     ((a.0 - b.0) as i64).abs().pow(2)
         + ((a.1 - b.1) as i64).abs().pow(2)
@@ -29,7 +28,7 @@ pub fn part1(input: &str) -> usize {
         .sorted()
         .collect_vec();
 
-    let mut circuts_sets = (0..boxes.len()).map(|i| HashSet::from([i])).collect_vec();
+    let mut circuts_sets = (0..boxes.len()).map(|i| vec![i]).collect_vec();
     let mut circuts_index = (0..boxes.len()).collect_vec();
 
     for (_, (mut i, mut j)) in &dist_pairs[0..1000] {
@@ -39,7 +38,7 @@ pub fn part1(input: &str) -> usize {
         let to_move = circuts_sets[circuts_index[i]].clone();
         circuts_sets[circuts_index[i]].clear();
         for k in to_move {
-            circuts_sets[circuts_index[j]].insert(k);
+            circuts_sets[circuts_index[j]].push(k);
             circuts_index[k] = circuts_index[j];
         }
     }
@@ -74,7 +73,7 @@ pub fn part2(input: &str) -> i64 {
         .sorted()
         .collect_vec();
 
-    let mut circuts_sets = (0..boxes.len()).map(|i| HashSet::from([i])).collect_vec();
+    let mut circuts_sets = (0..boxes.len()).map(|i| vec![i]).collect_vec();
     let mut circuts_index = (0..boxes.len()).collect_vec();
 
     for (_, (mut i, mut j)) in &dist_pairs {
@@ -84,7 +83,7 @@ pub fn part2(input: &str) -> i64 {
         let to_move = circuts_sets[circuts_index[i]].clone();
         circuts_sets[circuts_index[i]].clear();
         for k in to_move {
-            circuts_sets[circuts_index[j]].insert(k);
+            circuts_sets[circuts_index[j]].push(k);
             circuts_index[k] = circuts_index[j];
         }
         if circuts_sets[circuts_index[j]].len() == boxes.len() {
