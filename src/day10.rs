@@ -50,7 +50,7 @@ pub fn part1(input: &str) -> usize {
         .sum()
 }
 
-fn min_push_joltage(joltage: &[usize], buttons: &[Vec<usize>]) -> u64 {
+fn min_push_joltage(_joltage: &[usize], _buttons: &[Vec<usize>]) -> u64 {
     1
     /*b 0   1     2   3     4     5
      * (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
@@ -59,6 +59,13 @@ fn min_push_joltage(joltage: &[usize], buttons: &[Vec<usize>]) -> u64 {
      * j1: 5 = b1 + b5
      * j3: 4 = b3 + b4
      * j4: 7 = b0 + b1 + b3
+     *
+     * b0 = 7 - b1 - b3
+     * b1 = 5 - b5
+     * b3 = 4 - b4
+     * b0 = 7 - (5 - b5) - (4 - b4)
+     * b0 = 7 - 5 + b5 - 4 + b4
+     * b0 = b5 + b4 - 2
      */
 }
 
