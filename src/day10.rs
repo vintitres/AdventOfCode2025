@@ -50,34 +50,19 @@ pub fn part1(input: &str) -> usize {
         .sum()
 }
 
-fn min_push_joltage(
-    joltage: &[usize],
-    buttons: &[Vec<usize>],
-    mem: &mut HashMap<Vec<usize>, Option<u32>>,
-) -> Option<u32> {
-    if mem.contains_key(joltage) {
-        return mem[joltage];
-    }
-    // println!("{:?}", joltage);
-    let mut min_presses = None;
-    for button in buttons {
-        let mut new_joltage = joltage.to_vec();
-        if button.iter().any(|bit| new_joltage[*bit] == 0) {
-            continue;
-        }
-        for bit in button {
-            new_joltage[*bit] -= 1;
-        }
-        let new_presses = min_push_joltage(&new_joltage, buttons, mem);
-        if let Some(presses) = new_presses {
-            min_presses = Some(min_presses.unwrap_or(u32::MAX).min(1 + presses));
-        }
-    }
-    mem.insert(joltage.to_vec(), min_presses);
-    min_presses
+fn min_push_joltage(joltage: &[usize], buttons: &[Vec<usize>]) -> u64 {
+    1
+    /*b 0   1     2   3     4     5
+     * (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
+     *
+     * j0: 3 = b4 + b5
+     * j1: 5 = b1 + b5
+     * j3: 4 = b3 + b4
+     * j4: 7 = b0 + b1 + b3
+     */
 }
 
-pub fn part2(input: &str) -> u32 {
+pub fn part2(input: &str) -> u64 {
     input
         .lines()
         .map(|line| {
@@ -94,9 +79,7 @@ pub fn part2(input: &str) -> u32 {
                 .collect_vec();
 
             let (buttons, joltage) = buttons.split_at(buttons.len() - 1);
-            let mut mem = HashMap::from([(vec![0; joltage[0].len()], Some(0))]);
-            println!("! {}", joltage[0].iter().product::<usize>());
-            min_push_joltage(&joltage[0], &buttons, &mut mem).unwrap()
+            min_push_joltage(&joltage[0], &buttons)
         })
         .sum()
 }
