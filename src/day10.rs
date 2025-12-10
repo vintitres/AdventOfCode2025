@@ -1,4 +1,4 @@
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use itertools::Itertools;
 
@@ -50,8 +50,55 @@ pub fn part1(input: &str) -> usize {
         .sum()
 }
 
-pub fn part2(input: &str) -> usize {
-    input.lines().count()
+fn min_push_joltage(
+    joltage: &[usize],
+    buttons: &[Vec<usize>],
+    mem: &mut HashMap<Vec<usize>, Option<u32>>,
+) -> Option<u32> {
+    if mem.contains_key(joltage) {
+        return mem[joltage];
+    }
+    // println!("{:?}", joltage);
+    let mut min_presses = None;
+    for button in buttons {
+        let mut new_joltage = joltage.to_vec();
+        if button.iter().any(|bit| new_joltage[*bit] == 0) {
+            continue;
+        }
+        for bit in button {
+            new_joltage[*bit] -= 1;
+        }
+        let new_presses = min_push_joltage(&new_joltage, buttons, mem);
+        if let Some(presses) = new_presses {
+            min_presses = Some(min_presses.unwrap_or(u32::MAX).min(1 + presses));
+        }
+    }
+    mem.insert(joltage.to_vec(), min_presses);
+    min_presses
+}
+
+pub fn part2(input: &str) -> u32 {
+    input
+        .lines()
+        .map(|line| {
+            let buttons = line
+                .split(' ')
+                .skip(1)
+                .map(|button| &button[1..button.len() - 1])
+                .map(|button| {
+                    button
+                        .split(',')
+                        .map(|n| n.parse::<usize>().unwrap())
+                        .collect_vec()
+                })
+                .collect_vec();
+
+            let (buttons, joltage) = buttons.split_at(buttons.len() - 1);
+            let mut mem = HashMap::from([(vec![0; joltage[0].len()], Some(0))]);
+            println!("! {}", joltage[0].iter().product::<usize>());
+            min_push_joltage(&joltage[0], &buttons, &mut mem).unwrap()
+        })
+        .sum()
 }
 
 #[cfg(test)]
