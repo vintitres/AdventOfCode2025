@@ -50,23 +50,7 @@ pub fn part1(input: &str) -> usize {
         .sum()
 }
 
-fn min_push_joltage(joltage: &[usize], buttons: &[Vec<usize>]) -> u64 {
-    let mut button_conns = vec![0; joltage.len()];
-    for button in buttons {
-        for &i in button {
-            button_conns[i] += 1;
-        }
-    }
-    println!("button_conns: {:?}", button_conns);
-    let buttons_max = buttons
-        .iter()
-        .map(|button| button.iter().map(|&i| joltage[i]).min().unwrap())
-        .enumerate()
-        .collect_vec();
-    println!("buttons: {:?}", buttons_max);
-    // calculate ranges for each button and start from one with smallest range and try all values for it and subproblem without the button?
-    // // heck the ranges sizes first
-    //
+fn min_push_joltage(_joltage: &[usize], _buttons: &[Vec<usize>]) -> u64 {
     1
     /*
     * [.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
