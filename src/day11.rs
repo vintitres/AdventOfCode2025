@@ -1,9 +1,6 @@
-use std::{
-    collections::{HashMap, HashSet},
-    hash::Hash,
-};
+use std::collections::HashMap;
 
-use itertools::{GroupingMap, Itertools};
+use itertools::Itertools;
 
 pub fn part1(input: &str) -> usize {
     let graph: HashMap<&str, Vec<&str>> = input
@@ -27,49 +24,42 @@ pub fn part1(input: &str) -> usize {
     ways
 }
 
-fn dfs_ways(
-    graph: &HashMap<&str, Vec<&str>>,
-    from: &str,
-    to: &str,
-    mem: &mut HashMap<(&str, &str), usize>,
-) {
+fn dfs_ways<'a>(
+    graph: &'a HashMap<&str, Vec<&str>>,
+    from: &'a str,
+    to: &'a str,
+    mem: &mut HashMap<(&'a str, &'a str), u64>,
+) -> u64 {
+    if from == to {
+        return 1;
+    }
+    if let Some(&ways) = mem.get(&(from, to)) {
+        return ways;
+    }
+    let mut ways = 0;
+    for neighbor in graph.get(from).unwrap_or(&vec![]) {
+        ways += dfs_ways(graph, neighbor, to, mem);
+    }
+    mem.insert((from, to), ways);
+    ways
 }
 
-pub fn part2(input: &str) -> usize {
-    /*
-     * 1 0 0
-     * 0 1 0
-     * 0 0 1
-     *
-     *
-     */
-    let graph: HashMap<(&str, &str), usize> = input
+pub fn part2(input: &str) -> u64 {
+    let graph: HashMap<&str, Vec<&str>> = input
         .lines()
         .map(|line| {
             let (from, tos) = line.split_once(": ").unwrap();
-            tos.split(' ').map(|to| ((from, to), 1))
+            (from, tos.split(' ').collect_vec())
         })
-        .flatten()
         .collect();
-
-    let mut combinations = HashMap::new();
-    let mut queue = vec!["fft"];
-    let mut ways = 0;
-    while let Some((node, seen)) = queue.pop() {
-        if node == "out" {
-            ways += 1;
-            continue;
-        }
-        for &neighbor in graph.get(node).unwrap_or(&vec![]) {
-            if seen.contains(neighbor) {
-                continue;
-            }
-            let mut new_seen = seen.clone();
-            new_seen.insert(neighbor);
-            queue.push((neighbor, new_seen));
-        }
-    }
-    ways
+    let mut mem = HashMap::new();
+    let ways_fft_out = dfs_ways(&graph, "fft", "out", &mut mem);
+    let ways_dac_out = dfs_ways(&graph, "dac", "out", &mut mem);
+    let ways_fft_dac = dfs_ways(&graph, "fft", "dac", &mut mem);
+    let ways_dac_fft = dfs_ways(&graph, "dac", "fft", &mut mem);
+    let ways_svr_fft = dfs_ways(&graph, "svr", "fft", &mut mem);
+    let ways_svr_dac = dfs_ways(&graph, "svr", "dac", &mut mem);
+    ways_svr_dac * ways_dac_fft * ways_fft_out + ways_svr_fft * ways_fft_dac * ways_dac_out
 }
 
 #[cfg(test)]
@@ -85,9 +75,8 @@ mod tests {
         assert_eq!(part1(input()), 494);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 5782);
+        assert_eq!(part2(input()), 296006754704850);
     }
 }
