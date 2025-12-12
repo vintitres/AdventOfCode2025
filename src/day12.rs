@@ -48,10 +48,4 @@ mod tests {
     fn test_part1() {
         assert_eq!(part1(input()), 583);
     }
-
-    #[ignore = "not implemented"]
-    #[test]
-    fn test_part2() {
-        assert_eq!(part2(input()), 5782);
-    }
 }
