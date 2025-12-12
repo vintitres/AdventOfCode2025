@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashSet, VecDeque};
 
 use itertools::Itertools;
 
@@ -50,14 +50,7 @@ pub fn part1(input: &str) -> usize {
         .sum()
 }
 
-fn min_push_joltage(
-    needed_joltage: &[usize],
-    buttons: &Vec<Vec<usize>>,
-    mem: &mut HashMap<(Vec<usize>, Vec<Vec<usize>>), u64>,
-) -> Option<u64> {
-    if let Some(&result) = mem.get(&(needed_joltage.to_vec(), buttons.to_vec())) {
-        return Some(result);
-    }
+fn min_push_joltage(needed_joltage: &[usize], buttons: &Vec<Vec<usize>>) -> Option<u64> {
     if needed_joltage.iter().all(|&j| j == 0) {
         return Some(0);
     }
@@ -65,8 +58,17 @@ fn min_push_joltage(
         .iter()
         .enumerate()
         .filter(|&(_, &j)| j > 0)
-        .min_by_key(|&(_, j)| (j, buttons.iter().filter(|b| b.contains(&j)).count()))
+        .min_by_key(|&(i, j)| (buttons.iter().filter(|b| b.contains(&i)).count(), j))
         .unwrap();
+    if buttons
+        .iter()
+        .enumerate()
+        .filter(|(_, b)| b.contains(&i))
+        .count()
+        > 2
+    {
+        panic!(">2");
+    }
     if let Some((bi, b)) = buttons
         .iter()
         .enumerate()
@@ -75,8 +77,9 @@ fn min_push_joltage(
     {
         let mut new_buttons = buttons.clone();
         new_buttons.remove(bi);
-        let res = (0..=j)
-            .map(|bp| {
+        [0, j]
+            .iter()
+            .map(|&bp| {
                 // println!(
                 //     "needed_joltage: {:?}, buttons: {:?}, i: {}, j: {}, bi: {}, b: {:?}, bp: {}",
                 //     needed_joltage, buttons, i, j, bi, b, bp
@@ -93,17 +96,13 @@ fn min_push_joltage(
                     .enumerate()
                     .map(|(i, &j)| j - if b.contains(&i) { bp } else { 0 })
                     .collect_vec();
-                match min_push_joltage(&new_needed_joltage, &new_buttons, mem) {
+                match min_push_joltage(&new_needed_joltage, &new_buttons) {
                     Some(min_joltage) => Some(bp as u64 + min_joltage),
                     None => None,
                 }
             })
             .flatten()
-            .min();
-        if let Some(res) = res {
-            mem.insert((needed_joltage.to_vec(), buttons.to_vec()), res);
-        }
-        res
+            .min()
     } else {
         None
     }
@@ -112,7 +111,8 @@ fn min_push_joltage(
 pub fn part2(input: &str) -> u64 {
     input
         .lines()
-        .map(|line| {
+        .enumerate()
+        .map(|(i, line)| {
             let buttons = line
                 .split(' ')
                 .skip(1)
@@ -127,8 +127,8 @@ pub fn part2(input: &str) -> u64 {
 
             let (buttons, joltage) = buttons.split_at(buttons.len() - 1);
             let joltage = &joltage[0];
-            let mpl = min_push_joltage(&joltage, &buttons.to_vec(), &mut HashMap::new());
-            println!("{:?}", mpl);
+            let mpl = min_push_joltage(&joltage, &buttons.to_vec());
+            println!("{}: {:?}", i + 1, mpl);
             mpl
         })
         .flatten()
