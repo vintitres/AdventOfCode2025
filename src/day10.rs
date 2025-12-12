@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{BTreeSet, HashMap, HashSet, VecDeque};
 
 use itertools::Itertools;
 
@@ -77,84 +77,106 @@ fn min_push_joltage(
     {
         let mut new_buttons = buttons.clone();
         new_buttons.remove(bi);
-        (0..=j)
-            .map(|bp| {
-                // println!(
-                //     "needed_joltage: {:?}, buttons: {:?}, i: {}, j: {}, bi: {}, b: {:?}, bp: {}",
-                //     needed_joltage, buttons, i, j, bi, b, bp
-                // );
-                if needed_joltage
-                    .iter()
-                    .enumerate()
-                    .any(|(i, &j)| b.contains(&i) && j < bp)
-                {
-                    return None;
+        let mut begin = 0;
+        let mut end = j;
+        let mut last_presses = None;
+        while begin < end {
+            let bp = (begin + end - 1) / 2;
+            // println!(
+            //     "needed_joltage: {:?}, buttons: {:?}, i: {}, j: {}, bi: {}, b: {:?}, bp: {}",
+            //     needed_joltage, buttons, i, j, bi, b, bp
+            // );
+            if needed_joltage
+                .iter()
+                .enumerate()
+                .any(|(i, &j)| b.contains(&i) && j < bp)
+            {
+                return None;
+            }
+            let new_needed_joltage = needed_joltage
+                .iter()
+                .enumerate()
+                .map(|(i, &j)| j - if b.contains(&i) { bp } else { 0 })
+                .collect_vec();
+            match min_push_joltage(
+                &new_needed_joltage,
+                &new_buttons,
+                presses + bp as u64,
+                &mut min_presses,
+            ) {
+                Some(min_joltage) => {
+                    end = bp;
+                    last_presses = Some(bp as u64 + min_joltage);
                 }
-                let new_needed_joltage = needed_joltage
-                    .iter()
-                    .enumerate()
-                    .map(|(i, &j)| j - if b.contains(&i) { bp } else { 0 })
-                    .collect_vec();
-                match min_push_joltage(
-                    &new_needed_joltage,
-                    &new_buttons,
-                    presses + bp as u64,
-                    &mut min_presses,
-                ) {
-                    Some(min_joltage) => Some(bp as u64 + min_joltage),
-                    None => None,
-                }
-            })
-            .flatten()
-            .min()
+                None => begin = bp + 1,
+            }
+        }
+        last_presses
     } else {
         None
     }
 }
 
-fn min_push_joltage2(
-    joltage: &[usize],
-    buttons: &[Vec<usize>],
-    mem: &mut HashMap<Vec<usize>, Option<u64>>,
-    presses: u64,
-    mut global_min_presses: &mut u64,
-) -> Option<u64> {
-    if presses >= *global_min_presses {
-        return None;
-    }
-    if mem.contains_key(joltage) {
-        *global_min_presses = presses.min(*global_min_presses);
-        return mem[joltage];
-    }
-    let mut min_presses = None;
-    for button in buttons {
-        let mut new_joltage = joltage.to_vec();
-        if button.iter().any(|bit| new_joltage[*bit] == 0) {
+fn min_push_joltage2(expected_joltage: &[usize], buttons: &[Vec<usize>]) -> Option<u64> {
+    let buttons = &buttons
+        .iter()
+        .sorted_by_key(|b| b.iter().map(|i| expected_joltage[*i]).min())
+        .map(|b| b.clone())
+        .collect_vec();
+    let mut seen = HashMap::new();
+    let mut queue = BTreeSet::new();
+    queue.insert((0, vec![0; expected_joltage.len()]));
+    while let Some((presses, joltage)) = queue.pop_first() {
+        // println!("Presses: {}, Joltage: {:?}", presses, joltage);
+        let mut eq = true;
+        let mut gt = false;
+        for (j, e) in joltage.iter().zip(expected_joltage.iter()) {
+            if j > e {
+                gt = true;
+                break;
+            }
+            if j != e {
+                eq = false;
+            }
+        }
+        if gt {
             continue;
         }
-        for bit in button {
-            new_joltage[*bit] -= 1;
+        if eq {
+            return Some(presses);
         }
-        let new_presses = min_push_joltage2(
-            &new_joltage,
-            buttons,
-            mem,
-            presses + 1,
-            &mut global_min_presses,
-        );
-        if let Some(presses) = new_presses {
-            min_presses = Some(min_presses.unwrap_or(u64::MAX).min(1 + presses));
+        if let Some(&best_presses) = seen.get(&joltage) {
+            if presses >= best_presses {
+                continue;
+            }
+        }
+        seen.insert(joltage.clone(), presses);
+        for button in buttons {
+            let max_presses = button.iter().map(|&i| i).min().unwrap();
+            for new_presses in (1..=max_presses).rev() {
+                let new_joltage = joltage
+                    .iter()
+                    .enumerate()
+                    .map(|(i, &j)| {
+                        if button.contains(&i) {
+                            j + new_presses
+                        } else {
+                            j
+                        }
+                    })
+                    .collect_vec();
+                queue.insert((presses + new_presses as u64, new_joltage));
+            }
         }
     }
-    mem.insert(joltage.to_vec(), min_presses);
-    min_presses
+    None
 }
 
 pub fn part2(input: &str) -> u64 {
     input
         .lines()
         .enumerate()
-        .skip(41)
+        .skip(0)
         .map(|(i, line)| {
             let buttons = line
                 .split(' ')
