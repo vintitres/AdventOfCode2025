@@ -1,4 +1,4 @@
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use itertools::Itertools;
 
@@ -112,10 +112,49 @@ fn min_push_joltage(
     }
 }
 
+fn min_push_joltage2(
+    joltage: &[usize],
+    buttons: &[Vec<usize>],
+    mem: &mut HashMap<Vec<usize>, Option<u64>>,
+    presses: u64,
+    mut global_min_presses: &mut u64,
+) -> Option<u64> {
+    if presses >= *global_min_presses {
+        return None;
+    }
+    if mem.contains_key(joltage) {
+        *global_min_presses = presses.min(*global_min_presses);
+        return mem[joltage];
+    }
+    let mut min_presses = None;
+    for button in buttons {
+        let mut new_joltage = joltage.to_vec();
+        if button.iter().any(|bit| new_joltage[*bit] == 0) {
+            continue;
+        }
+        for bit in button {
+            new_joltage[*bit] -= 1;
+        }
+        let new_presses = min_push_joltage2(
+            &new_joltage,
+            buttons,
+            mem,
+            presses + 1,
+            &mut global_min_presses,
+        );
+        if let Some(presses) = new_presses {
+            min_presses = Some(min_presses.unwrap_or(u64::MAX).min(1 + presses));
+        }
+    }
+    mem.insert(joltage.to_vec(), min_presses);
+    min_presses
+}
+
 pub fn part2(input: &str) -> u64 {
     input
         .lines()
         .enumerate()
+        .skip(41)
         .map(|(i, line)| {
             let buttons = line
                 .split(' ')
