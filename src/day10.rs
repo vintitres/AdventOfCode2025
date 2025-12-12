@@ -50,8 +50,17 @@ pub fn part1(input: &str) -> usize {
         .sum()
 }
 
-fn min_push_joltage(needed_joltage: &[usize], buttons: &Vec<Vec<usize>>) -> Option<u64> {
+fn min_push_joltage(
+    needed_joltage: &[usize],
+    buttons: &Vec<Vec<usize>>,
+    presses: u64,
+    mut min_presses: &mut u64,
+) -> Option<u64> {
+    if presses >= *min_presses {
+        return None;
+    }
     if needed_joltage.iter().all(|&j| j == 0) {
+        *min_presses = presses.min(*min_presses);
         return Some(0);
     }
     let (i, &j) = needed_joltage
@@ -86,7 +95,12 @@ fn min_push_joltage(needed_joltage: &[usize], buttons: &Vec<Vec<usize>>) -> Opti
                     .enumerate()
                     .map(|(i, &j)| j - if b.contains(&i) { bp } else { 0 })
                     .collect_vec();
-                match min_push_joltage(&new_needed_joltage, &new_buttons) {
+                match min_push_joltage(
+                    &new_needed_joltage,
+                    &new_buttons,
+                    presses + bp as u64,
+                    &mut min_presses,
+                ) {
                     Some(min_joltage) => Some(bp as u64 + min_joltage),
                     None => None,
                 }
@@ -117,7 +131,8 @@ pub fn part2(input: &str) -> u64 {
 
             let (buttons, joltage) = buttons.split_at(buttons.len() - 1);
             let joltage = &joltage[0];
-            let mpl = min_push_joltage(&joltage, &buttons.to_vec());
+            let mut min_presses = u64::MAX;
+            let mpl = min_push_joltage(&joltage, &buttons.to_vec(), 0, &mut min_presses);
             println!("{}: {:?}", i + 1, mpl);
             mpl
         })
