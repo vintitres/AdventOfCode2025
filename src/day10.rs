@@ -60,15 +60,6 @@ fn min_push_joltage(needed_joltage: &[usize], buttons: &Vec<Vec<usize>>) -> Opti
         .filter(|&(_, &j)| j > 0)
         .min_by_key(|&(i, j)| (buttons.iter().filter(|b| b.contains(&i)).count(), j))
         .unwrap();
-    if buttons
-        .iter()
-        .enumerate()
-        .filter(|(_, b)| b.contains(&i))
-        .count()
-        > 2
-    {
-        panic!(">2");
-    }
     if let Some((bi, b)) = buttons
         .iter()
         .enumerate()
@@ -77,9 +68,8 @@ fn min_push_joltage(needed_joltage: &[usize], buttons: &Vec<Vec<usize>>) -> Opti
     {
         let mut new_buttons = buttons.clone();
         new_buttons.remove(bi);
-        [0, j]
-            .iter()
-            .map(|&bp| {
+        (0..=j)
+            .map(|bp| {
                 // println!(
                 //     "needed_joltage: {:?}, buttons: {:?}, i: {}, j: {}, bi: {}, b: {:?}, bp: {}",
                 //     needed_joltage, buttons, i, j, bi, b, bp
