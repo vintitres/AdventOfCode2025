@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use itertools::Itertools;
 
@@ -50,121 +50,84 @@ pub fn part1(input: &str) -> usize {
         .sum()
 }
 
-fn min_push_joltage(
-    needed_joltage: &[usize],
-    buttons: &Vec<Vec<usize>>,
-    presses: u64,
-    mut min_presses: &mut u64,
-) -> Option<u64> {
-    if presses >= *min_presses {
-        return None;
-    }
-    if needed_joltage.iter().all(|&j| j == 0) {
-        *min_presses = presses.min(*min_presses);
-        return Some(0);
-    }
-    // let (i, &j) = needed_joltage
-    //     .iter()
-    //     .enumerate()
-    //     .filter(|&(_, &j)| j > 0)
-    //     .min_by_key(|&(i, j)| (buttons.iter().filter(|b| b.contains(&i)).count(), j))
-    //     .unwrap();
-    if let Some((bi, b)) = buttons.iter().enumerate().min_by_key(|(_, b)| b.len()) {
-        let mut new_buttons = buttons.clone();
-        new_buttons.remove(bi);
-        let max_p = b.iter().map(|bb| needed_joltage[*bb]).min().unwrap();
-        (0..=max_p)
-            .rev()
-            .map(|bp| {
-                if needed_joltage
-                    .iter()
-                    .enumerate()
-                    .any(|(i, &j)| b.contains(&i) && j < bp)
-                {
-                    return None;
-                }
-                let new_needed_joltage = needed_joltage
-                    .iter()
-                    .enumerate()
-                    .map(|(i, &j)| j - if b.contains(&i) { bp } else { 0 })
-                    .collect_vec();
-                match min_push_joltage(
-                    &new_needed_joltage,
-                    &new_buttons,
-                    presses + bp as u64,
-                    &mut min_presses,
-                ) {
-                    Some(min_joltage) => Some(bp as u64 + min_joltage),
-                    None => None,
-                }
-            })
-            .flatten()
-            .min()
-    } else {
-        None
-    }
+fn find_parity_buttons(joltage: &[usize], buttons: &[Vec<usize>]) -> Vec<Vec<Vec<usize>>> {
+    (1..=buttons.len())
+        .map(|i| {
+            buttons
+                .iter()
+                .combinations(i)
+                .map(|buttons_set| {
+                    if joltage.iter().enumerate().all(|(i, &j)| {
+                        let c = buttons_set
+                            .iter()
+                            .filter(|button| button.contains(&i))
+                            .count();
+                        c <= j && (j - c) % 2 == 0
+                    }) {
+                        Some(
+                            buttons_set
+                                .iter()
+                                .map(|button| button.iter().map(|&bit| bit).collect_vec())
+                                .collect_vec(),
+                        )
+                    } else {
+                        None
+                    }
+                })
+                .flatten()
+        })
+        .flatten()
+        .collect_vec()
 }
 
-fn min_push_joltage2(expected_joltage: &[usize], buttons: &[Vec<usize>]) -> Option<u64> {
-    let buttons = &buttons
-        .iter()
-        .sorted_by_key(|b| b.iter().map(|i| expected_joltage[*i]).min())
-        .map(|b| b.clone())
-        .collect_vec();
-    let mut seen = HashMap::new();
-    let mut queue = BTreeSet::new();
-    queue.insert((0, vec![0; expected_joltage.len()]));
-    while let Some((presses, joltage)) = queue.pop_first() {
-        // println!("Presses: {}, Joltage: {:?}", presses, joltage);
-        let mut eq = true;
-        let mut gt = false;
-        for (j, e) in joltage.iter().zip(expected_joltage.iter()) {
-            if j > e {
-                gt = true;
-                break;
-            }
-            if j != e {
-                eq = false;
-            }
-        }
-        if gt {
-            continue;
-        }
-        if eq {
-            return Some(presses);
-        }
-        if let Some(&best_presses) = seen.get(&joltage) {
-            if presses >= best_presses {
-                continue;
-            }
-        }
-        seen.insert(joltage.clone(), presses);
-        for button in buttons {
-            let max_presses = button.iter().map(|&i| i).min().unwrap();
-            for new_presses in (1..=max_presses).rev() {
-                let new_joltage = joltage
-                    .iter()
-                    .enumerate()
-                    .map(|(i, &j)| {
-                        if button.contains(&i) {
-                            j + new_presses
-                        } else {
-                            j
-                        }
-                    })
-                    .collect_vec();
-                queue.insert((presses + new_presses as u64, new_joltage));
-            }
-        }
+fn min_push_joltage(
+    joltage: &[usize],
+    buttons: &[Vec<usize>],
+    mem: &mut HashMap<Vec<usize>, Option<u64>>,
+) -> Option<u64> {
+    if joltage.iter().all(|&j| j == 0) {
+        return Some(0);
     }
-    None
+    if let Some(&result) = mem.get(joltage) {
+        return result;
+    }
+    if joltage.iter().all(|&j| j % 2 == 0) {
+        let new_joltage = joltage.iter().map(|&j| j / 2).collect_vec();
+        return if let Some(res) = min_push_joltage(&new_joltage, &buttons, mem) {
+            Some(2 * res)
+        } else {
+            None
+        };
+    }
+    let result = find_parity_buttons(joltage, buttons)
+        .iter()
+        .map(|parity_buttons| {
+            // println!(
+            //     "joltage: {:?}, parity_buttons: {:?}",
+            //     joltage, parity_buttons
+            // );
+            let new_joltage = joltage
+                .iter()
+                .enumerate()
+                .map(|(i, &j)| (j - parity_buttons.iter().filter(|b| b.contains(&i)).count()) / 2)
+                .collect_vec();
+            if let Some(sub_presses) = min_push_joltage(&new_joltage, &buttons, mem) {
+                Some(parity_buttons.len() as u64 + 2 * sub_presses)
+            } else {
+                None
+            }
+        })
+        .flatten()
+        .min();
+    // println!("joltage: {:?}, result: {:?}", joltage, result);
+    mem.insert(joltage.to_vec(), result);
+    result
 }
 
 pub fn part2(input: &str) -> u64 {
     input
         .lines()
         .enumerate()
-        .skip(6)
         .map(|(i, line)| {
             let buttons = line
                 .split(' ')
@@ -180,8 +143,7 @@ pub fn part2(input: &str) -> u64 {
 
             let (buttons, joltage) = buttons.split_at(buttons.len() - 1);
             let joltage = &joltage[0];
-            let mut min_presses = u64::MAX;
-            let mpl = min_push_joltage(&joltage, &buttons.to_vec(), 0, &mut min_presses);
+            let mpl = min_push_joltage(&joltage, &buttons.to_vec(), &mut HashMap::new());
             println!("{}: {:?}", i + 1, mpl);
             mpl
         })
@@ -205,6 +167,6 @@ mod tests {
     #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 5782);
+        assert_eq!(part2(input()), 1);
     }
 }
