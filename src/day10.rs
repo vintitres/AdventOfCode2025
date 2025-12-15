@@ -63,55 +63,43 @@ fn min_push_joltage(
         *min_presses = presses.min(*min_presses);
         return Some(0);
     }
-    let (i, &j) = needed_joltage
-        .iter()
-        .enumerate()
-        .filter(|&(_, &j)| j > 0)
-        .min_by_key(|&(i, j)| (buttons.iter().filter(|b| b.contains(&i)).count(), j))
-        .unwrap();
-    if let Some((bi, b)) = buttons
-        .iter()
-        .enumerate()
-        .filter(|(_, b)| b.contains(&i))
-        .next()
-    {
+    // let (i, &j) = needed_joltage
+    //     .iter()
+    //     .enumerate()
+    //     .filter(|&(_, &j)| j > 0)
+    //     .min_by_key(|&(i, j)| (buttons.iter().filter(|b| b.contains(&i)).count(), j))
+    //     .unwrap();
+    if let Some((bi, b)) = buttons.iter().enumerate().min_by_key(|(_, b)| b.len()) {
         let mut new_buttons = buttons.clone();
         new_buttons.remove(bi);
-        let mut begin = 0;
-        let mut end = j;
-        let mut last_presses = None;
-        while begin < end {
-            let bp = (begin + end - 1) / 2;
-            // println!(
-            //     "needed_joltage: {:?}, buttons: {:?}, i: {}, j: {}, bi: {}, b: {:?}, bp: {}",
-            //     needed_joltage, buttons, i, j, bi, b, bp
-            // );
-            if needed_joltage
-                .iter()
-                .enumerate()
-                .any(|(i, &j)| b.contains(&i) && j < bp)
-            {
-                return None;
-            }
-            let new_needed_joltage = needed_joltage
-                .iter()
-                .enumerate()
-                .map(|(i, &j)| j - if b.contains(&i) { bp } else { 0 })
-                .collect_vec();
-            match min_push_joltage(
-                &new_needed_joltage,
-                &new_buttons,
-                presses + bp as u64,
-                &mut min_presses,
-            ) {
-                Some(min_joltage) => {
-                    end = bp;
-                    last_presses = Some(bp as u64 + min_joltage);
+        let max_p = b.iter().map(|bb| needed_joltage[*bb]).min().unwrap();
+        (0..=max_p)
+            .rev()
+            .map(|bp| {
+                if needed_joltage
+                    .iter()
+                    .enumerate()
+                    .any(|(i, &j)| b.contains(&i) && j < bp)
+                {
+                    return None;
                 }
-                None => begin = bp + 1,
-            }
-        }
-        last_presses
+                let new_needed_joltage = needed_joltage
+                    .iter()
+                    .enumerate()
+                    .map(|(i, &j)| j - if b.contains(&i) { bp } else { 0 })
+                    .collect_vec();
+                match min_push_joltage(
+                    &new_needed_joltage,
+                    &new_buttons,
+                    presses + bp as u64,
+                    &mut min_presses,
+                ) {
+                    Some(min_joltage) => Some(bp as u64 + min_joltage),
+                    None => None,
+                }
+            })
+            .flatten()
+            .min()
     } else {
         None
     }
@@ -176,7 +164,7 @@ pub fn part2(input: &str) -> u64 {
     input
         .lines()
         .enumerate()
-        .skip(0)
+        .skip(6)
         .map(|(i, line)| {
             let buttons = line
                 .split(' ')
