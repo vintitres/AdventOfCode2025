@@ -51,7 +51,7 @@ pub fn part1(input: &str) -> usize {
 }
 
 fn find_parity_buttons(joltage: &[usize], buttons: &[Vec<usize>]) -> Vec<Vec<Vec<usize>>> {
-    (1..=buttons.len())
+    (0..=buttons.len())
         .map(|i| {
             buttons
                 .iter()
@@ -90,14 +90,6 @@ fn min_push_joltage(
     }
     if let Some(&result) = mem.get(joltage) {
         return result;
-    }
-    if joltage.iter().all(|&j| j % 2 == 0) {
-        let new_joltage = joltage.iter().map(|&j| j / 2).collect_vec();
-        return if let Some(res) = min_push_joltage(&new_joltage, &buttons, mem) {
-            Some(2 * res)
-        } else {
-            None
-        };
     }
     let result = find_parity_buttons(joltage, buttons)
         .iter()
