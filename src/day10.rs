@@ -156,9 +156,9 @@ mod tests {
         assert_eq!(part1(input()), 507);
     }
 
-    #[ignore = "not implemented"]
+    #[ignore = "slow"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 1);
+        assert_eq!(part2(input()), 18981);
     }
 }
